@@ -3,10 +3,9 @@ const fs = require('node:fs/promises');
 
 const server = net.createServer();
 
-let fileHandler, fileWriteStream;
-
 server.on('connection', (socket) => {
   console.log("New conection");
+  let fileHandler, fileWriteStream;
 
   socket.on('data', async (chunk) => {
      if (!fileHandler) {
@@ -17,6 +16,7 @@ server.on('connection', (socket) => {
       fileHandler = await fs.open(`storage/${header}`, 'w');
       fileWriteStream = fileHandler.createWriteStream();
       fileWriteStream.write(chunk.subarray(indexOfHeadersEnd, 6));
+
       socket.resume(); // resume receiving data from the client
       fileWriteStream.on('drain', () => socket.resume());
      } else {
