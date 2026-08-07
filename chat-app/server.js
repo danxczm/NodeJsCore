@@ -19,6 +19,7 @@ server.on("connection", (socket) => {
   sockets.push({ clientId, socket });
 
   socket.write(`id-${clientId}`);
+
   socket.on("data", (data) => {
     const toString = data.toString();
     const id = toString.substring(0, toString.indexOf("-"));
