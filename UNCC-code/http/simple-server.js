@@ -27,7 +27,6 @@ server.on('request', (request, response) => {
   });
 
   response.end(JSON.stringify({ message: 'the end of server response' }));
-
 });
 
 server.listen(8050, () => {
