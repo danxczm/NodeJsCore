@@ -16,3 +16,9 @@ yarn-debug.log*
 yarn-error.log*
 
 *.log
+
+# generated test/output data (can grow to GBs, should never be committed)
+encrypt-decrypt/text.txt
+encrypt-decrypt/encrypted.txt
+streamsFolder/text.txt
+uploader/hellaBig.txt
