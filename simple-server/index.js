@@ -36,6 +36,25 @@ server.on('request', async (request, response) => {
     fileStream.pipe(response);
   }
 
+  if (request.method === 'POST' && request.url === '/login') {
+    response.setHeader('Content-Type', 'application/json');
+    response.statusCode = 200;
+
+    response.end(JSON.stringify({ message: "You are loged in." }));
+  }
+
+  if (request.method === 'POST' && request.url === '/upload') {
+    const fileHandle = await fs.open('./storage/image.png', 'w');
+    const fileStream = fileHandle.createWriteStream();
+
+    request.pipe(fileStream);
+
+    request.on('end', () => {
+      response.statusCode = 200;
+      response.end(JSON.stringify({ message: "The file is uploaded succesfuly!" }));
+    });
+  }
+
 });
 
 server.listen(8000, () => {
