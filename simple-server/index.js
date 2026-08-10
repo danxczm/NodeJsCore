@@ -44,6 +44,7 @@ server.on('request', async (request, response) => {
   }
 
   if (request.method === 'POST' && request.url === '/upload') {
+    response.setHeader('Content-Type', 'application/json');
     const fileHandle = await fs.open('./storage/image.png', 'w');
     const fileStream = fileHandle.createWriteStream();
 
