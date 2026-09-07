@@ -5,6 +5,7 @@ class Butter {
   constructor() {
     this.server = http.createServer();
     this.routes = {};
+    this.middleware = [];
 
     this.server.on("request", (req, res) => {
       res.sendFile = async (path, mime) => {
@@ -25,13 +26,32 @@ class Butter {
         res.end(JSON.stringify(data));
       };
 
-      if (!this.routes[req.method.toLowerCase() + req.url]) {
-        return res
-          .status(404)
-          .json({ message: `Cant ${req.method.toLowerCase()} for ${req.url}` });
-      }
+      // this.middleware[0](req, res, () => {
+      //   this.middleware[1](req, res, () => {
+      //     this.middleware[2](req, res, () => {
+      //       this.routes[req.method.toLowerCase() + req.url](req, res);
+      //     });
+      //   });
+      // });
+      //
 
-      this.routes[req.method.toLowerCase() + req.url](req, res);
+      const runMiddleware = (req, res, middleware, index) => {
+        if (middleware.length === index) {
+          if (!this.routes[req.method.toLowerCase() + req.url]) {
+            return res.status(404).json({
+              message: `Cant ${req.method.toLowerCase()} for ${req.url}`,
+            });
+          }
+
+          this.routes[req.method.toLowerCase() + req.url](req, res);
+        } else {
+          middleware[index](req, res, () => {
+            runMiddleware(req, res, middleware, index + 1);
+          });
+        }
+      };
+
+      runMiddleware(req, res, this.middleware, 0);
     });
   }
 
@@ -43,6 +63,10 @@ class Butter {
     this.server.listen(port, () => {
       cb();
     });
+  }
+
+  beforeEach(cb) {
+    this.middleware.push(cb);
   }
 }
 
