@@ -1,0 +1,4 @@
+This is from stdrout!This data comes from stdrin: hey there
+
+This data comes from stdrin: still getting data to a file
+
