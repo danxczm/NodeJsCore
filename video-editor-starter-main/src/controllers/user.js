@@ -30,7 +30,7 @@ const logUserOut = (req, res) => {
   // Remove the session object form the DB SESSIONS array
   DB.update();
   const sessionIndex = DB.sessions.findIndex(
-    (session) => session.userId === req.userId
+    (session) => session.userId === req.userId,
   );
   if (sessionIndex > -1) {
     DB.sessions.splice(sessionIndex, 1);
@@ -38,7 +38,7 @@ const logUserOut = (req, res) => {
   }
   res.setHeader(
     "Set-Cookie",
-    `token=deleted; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+    `token=deleted; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
   );
   res.status(200).json({ message: "Logged out successfully!" });
 };
