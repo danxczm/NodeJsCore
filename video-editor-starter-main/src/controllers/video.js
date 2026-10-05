@@ -4,6 +4,7 @@ const fs = require("node:fs/promises");
 const { pipeline } = require("node:stream/promises");
 const util = require("../../lib/util");
 const DB = require("../DB");
+const FF = require("../../lib/ff");
 
 const uploadVideo = async (req, res, handleErr) => {
   const fullFileName = req.headers.filename;
@@ -18,12 +19,20 @@ const uploadVideo = async (req, res, handleErr) => {
     const fileHandler = await fs.open(filePath, "w");
     const fileStream = fileHandler.createWriteStream();
 
+    await pipeline(req, fileStream);
+
+    const thumbnailPath = `./storage/${videoFolderId}/thumbnail.jpg`;
+    await FF.makeThumbnail(filePath, thumbnailPath);
+
+    const dimensions = await FF.getDimensions(filePath);
+
     DB.update();
     DB.videos.unshift({
       id: DB.videos.length,
       videoId: videoFolderId,
       name: fileName,
       extension: fileFormat,
+      dimensions,
       userId: req.userId,
       extractedAudio: false,
       resizes: {},
@@ -31,25 +40,14 @@ const uploadVideo = async (req, res, handleErr) => {
 
     DB.save();
 
-    res.status(200).json({
+    res.status(201).json({
       status: "success",
       message: "The file was uploaded successfully!",
     });
-
-    await pipeline(req, fileStream);
   } catch (e) {
     util.deleteFolder(`./storage/${videoFolderId}`);
     if (e.code !== "ECONNRESET") return handleErr(e);
   }
-
-  // нужно будет обработать ошибку под случай если пользователь сделает кенсел
-  //
-  // 1 получить название фолдера
-  // 2 создать фолдер
-  // 3 нужно также сформировать путь папка + название файла
-  // 4 открить фолдер для чтения w - и создать пайплайн в него (пайплайн для хендлинга ерора)
-  // 5 обновить ДБ создать запись
-  // имея ошибку от пользователя про отмену загрузки удалить фалй
 };
 
 const controller = {

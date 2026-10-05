@@ -1,1 +1,15 @@
-[{"id":0,"videoId":"bf4ea1c6","name":"31. Lake Ontario","extension":"mov","userId":3,"extractedAudio":false,"resizes":{}}]
+[
+  {
+    "id": 0,
+    "videoId": "499b4a7e",
+    "name": "1. Introduction",
+    "extension": "mp4",
+    "dimensions": {
+      "width": 1280,
+      "height": 720
+    },
+    "userId": 3,
+    "extractedAudio": false,
+    "resizes": {}
+  }
+]
