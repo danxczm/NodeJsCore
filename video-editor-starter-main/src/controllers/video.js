@@ -50,8 +50,80 @@ const uploadVideo = async (req, res, handleErr) => {
   }
 };
 
+const getVideos = (req, res, handleErr) => {
+  DB.update();
+  const videos = DB.videos.filter((video) => video.userId === req.userId);
+
+  res.status(200).json(videos);
+};
+
+const getVideoAsset = async (req, res, handleErr) => {
+  // /get-video-asset?videoId=254627b3&type=thumbnail
+
+  const videoId = req.params.get("videoId");
+  const fileType = req.params.get("type"); // thumbnail, audio, resize, original
+
+  const video = DB.videos.find((video) => video.videoId === videoId);
+
+  if (!video) return handleErr({ satus: "400", message: "Video not found!" });
+
+  let file;
+  let fileName; // final file name.extension
+  let mimeType;
+
+  switch (fileType) {
+    case "thumbnail":
+      file = await fs.open(`./storage/${videoId}/thumbnail.jpg`, "r");
+      mimeType = "image/jpeg";
+      break;
+
+    case "audio":
+      file = await fs.open(`./storage/${videoId}/audio.aac`, "r");
+      mimeType = "audio/aac";
+      fileName = `${fileName}-audio.aac`;
+      break;
+
+    case "resize":
+      const dimensions = req.params.get("dimensions");
+      file = await fs.open(
+        `./storage/${videoId}/${dimensions}.${video.extension}`,
+        "r",
+      );
+      mimeType = "video/mp4";
+      fileName = `${video.name}-${dimensions}.${video.extension}`;
+      break;
+
+    case "original":
+      file = await fs.open(
+        `./storage/${videoId}/origin.${video.extension}`,
+        "r",
+      );
+      mimeType = "video/mp4"; //варто зробити мапу відповідностей форматів
+      fileName = `${video.name}.${video.extension}`;
+      break;
+  }
+
+  if (fileType !== "thumbnail") {
+    res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+  }
+
+  const fileSize = await file.stat();
+  const fileStream = file.createReadStream();
+
+  res.setHeader("Content-Type", mimeType);
+  res.setHeader("Content-Length", fileSize.size);
+
+  res.status(200);
+
+  await pipeline(fileStream, res);
+
+  file.close();
+};
+
 const controller = {
   uploadVideo,
+  getVideos,
+  getVideoAsset,
 };
 
 module.exports = controller;
