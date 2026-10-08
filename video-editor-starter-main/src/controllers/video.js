@@ -68,7 +68,7 @@ const getVideoAsset = async (req, res, handleErr) => {
   if (!video) return handleErr({ satus: "400", message: "Video not found!" });
 
   let file;
-  let fileName; // final file name.extension
+  let fileName; // final fileName.extension
   let mimeType;
 
   switch (fileType) {
@@ -80,7 +80,7 @@ const getVideoAsset = async (req, res, handleErr) => {
     case "audio":
       file = await fs.open(`./storage/${videoId}/audio.aac`, "r");
       mimeType = "audio/aac";
-      fileName = `${fileName}-audio.aac`;
+      fileName = `${video.name}-audio.aac`;
       break;
 
     case "resize":
@@ -107,23 +107,61 @@ const getVideoAsset = async (req, res, handleErr) => {
     res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
   }
 
-  const fileSize = await file.stat();
-  const fileStream = file.createReadStream();
+  try {
+    const fileSize = await file.stat();
+    const fileStream = file.createReadStream();
 
-  res.setHeader("Content-Type", mimeType);
-  res.setHeader("Content-Length", fileSize.size);
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader("Content-Length", fileSize.size);
 
-  res.status(200);
+    res.status(200);
 
-  await pipeline(fileStream, res);
-
-  file.close();
+    await pipeline(fileStream, res);
+  } catch (e) {
+    return handleErr(e);
+  } finally {
+    file.close();
+  }
 };
+
+const extractAudio = async (req, res, handleErr) => {
+  const videoId = req.params.get("videoId");
+
+  DB.update();
+  const video = DB.videos.find((video) => video.videoId === videoId);
+
+  if (video.extractedAudio) {
+    return handleErr({
+      status: 400,
+      message: "The audio has already been extracted for this video.",
+    });
+  }
+
+  try {
+    const originalVideoPath = `./storage/${videoId}/origin.${video.extension}`;
+    const targetAudioPath = `./storage/${videoId}/audio.aac`;
+
+    await FF.extractAudio(originalVideoPath, targetAudioPath);
+    video.extractedAudio = true;
+    DB.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "The audio was extracted successfully!",
+    });
+  } catch (e) {
+    util.deleteFile(targetAudioPath);
+    return handleErr(e);
+  }
+};
+
+const resizeVideo = (req, res, handleErr) => {};
 
 const controller = {
   uploadVideo,
   getVideos,
   getVideoAsset,
+  extractAudio,
 };
 
 module.exports = controller;

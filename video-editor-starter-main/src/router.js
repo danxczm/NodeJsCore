@@ -26,8 +26,12 @@ module.exports = (server) => {
   // Upload a video file
   server.route("post", "/api/upload-video", Video.uploadVideo);
 
+  server.route("patch", "/api/video/extract-audio", Video.extractAudio);
+
   // Return list of videos to a user
   server.route("get", "/api/videos", Video.getVideos);
+
+  server.route("put", "/api/video/resize", Video.resizeVideo);
 
   server.route("get", "/get-video-asset", Video.getVideoAsset);
 };

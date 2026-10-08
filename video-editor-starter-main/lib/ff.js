@@ -1,4 +1,5 @@
 const { spawn } = require("node:child_process");
+const { stderr } = require("node:process");
 
 const makeThumbnail = (filePath, thumbnailPath) => {
   // ffmpeg -i video.mp4 -ss 5 -vframes 1 thumbnail.jpg
@@ -70,7 +71,33 @@ const getDimensions = (filePath) => {
   });
 };
 
+const extractAudio = (originalVideoPath, targetAudioPath) => {
+  return new Promise((resolve, reject) => {
+    const spawnExtractAudio = spawn("ffmpeg", [
+      "-i",
+      originalVideoPath,
+      "-vn",
+      "-c:a",
+      "copy",
+      targetAudioPath,
+    ]);
+
+    spawnExtractAudio.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`ffmpeg exited with code ${code}`));
+      }
+    });
+
+    spawnExtractAudio.on("error", (error) => {
+      reject(error);
+    });
+  });
+};
+
 module.exports = {
   makeThumbnail,
   getDimensions,
+  extractAudio,
 };
