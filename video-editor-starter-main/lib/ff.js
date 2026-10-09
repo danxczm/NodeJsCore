@@ -1,5 +1,4 @@
 const { spawn } = require("node:child_process");
-const { stderr } = require("node:process");
 
 const makeThumbnail = (filePath, thumbnailPath) => {
   // ffmpeg -i video.mp4 -ss 5 -vframes 1 thumbnail.jpg
@@ -96,8 +95,37 @@ const extractAudio = (originalVideoPath, targetAudioPath) => {
   });
 };
 
+const resizeVideo = (originalVideoPath, targetVideoPath, width, height) => {
+  return new Promise((resolve, reject) => {
+    const spawnResizeVideo = spawn("ffmpeg", [
+      "-i",
+      originalVideoPath,
+      "-vf",
+      `scale=${width}x${height}`,
+      "-c:a",
+      "copy",
+      targetVideoPath,
+    ]);
+
+    spawnResizeVideo.stderr.on("data", (d) => console.log(`${d}`));
+
+    spawnResizeVideo.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject("FFmpeg existed with this code");
+      }
+    });
+
+    spawnResizeVideo.on("error", (err) => {
+      reject(err);
+    });
+  });
+};
+
 module.exports = {
   makeThumbnail,
   getDimensions,
   extractAudio,
+  resizeVideo,
 };
